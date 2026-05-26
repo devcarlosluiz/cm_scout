@@ -56,8 +56,12 @@ django-ratelimit==4.1.0
 # Security
 django-axes==6.4.0
 
+# WSGI server
+gunicorn==22.0.0
+
 # Logging
 structlog==24.1.0
+python-json-logger==2.0.7
 
 # Development
 django-debug-toolbar==4.3.0
