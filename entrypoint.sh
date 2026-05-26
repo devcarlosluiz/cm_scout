@@ -4,6 +4,22 @@ set -e
 echo "==> Running migrations..."
 python manage.py migrate --noinput
 
+echo "==> Creating cache table (fallback)..."
+python manage.py createcachetable 2>/dev/null || true
+
+if [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+    echo "==> Creating superuser (if not exists)..."
+    python manage.py shell -c "
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(email='$DJANGO_SUPERUSER_EMAIL').exists():
+    User.objects.create_superuser(email='$DJANGO_SUPERUSER_EMAIL', password='$DJANGO_SUPERUSER_PASSWORD')
+    print('Superuser created.')
+else:
+    print('Superuser already exists.')
+"
+fi
+
 if [ "$RUN_SYNC_ON_START" = "true" ]; then
     echo "==> Running sync_all..."
     python manage.py sync_all
