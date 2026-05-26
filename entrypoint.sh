@@ -24,8 +24,8 @@ else:
 fi
 
 if [ "$RUN_SYNC_ON_START" = "true" ]; then
-    echo "==> Running sync_all..."
-    python manage.py sync_all
+    echo "==> Running sync_all in background..."
+    python manage.py sync_all &
 fi
 
 echo "==> Starting gunicorn..."
