@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load core_tags humanize %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Visão geral dos próximos 7 dias{% endblock %}
+
+{% block content %}
+
+<!-- Stats Cards Row -->
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+
+    {% include 'dashboard/partials/stat_card.html' with title="Jogos Hoje" value=games_today icon="calendar-today" color="brand" %}
+    {% include 'dashboard/partials/stat_card.html' with title="Jogos Amanhã" value=games_tomorrow icon="calendar-next" color="violet" %}
+    {% include 'dashboard/partials/stat_card.html' with title="Próximos 7 Dias" value=games_7_days icon="calendar-week" color="sky" %}
+    {% include 'dashboard/partials/stat_card.html' with title="Oportunidades" value=opportunities icon="fire" color="amber" %}
+    {% include 'dashboard/partials/stat_card.html' with title="Odds Monitoradas" value=odds_monitored icon="chart" color="emerald" %}
+
+</div>
+
+<!-- Charts + Top Opportunities Row -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+
+    <!-- Chart: Fixtures by League -->
+    <div class="xl:col-span-1 bg-surface-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-semibold text-slate-300 mb-4">Jogos por Liga</h2>
+        <div class="relative h-56">
+            <canvas id="leaguesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart: Predictions by Market -->
+    <div class="xl:col-span-1 bg-surface-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-semibold text-slate-300 mb-4">Mercados Analisados</h2>
+        <div class="relative h-56">
+            <canvas id="marketsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Opportunities -->
+    <div class="xl:col-span-1 bg-surface-900 border border-slate-800 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-semibold text-slate-300">Top Oportunidades</h2>
+            <a href="{% url 'analysis:index' %}" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
+                Ver tudo →
+            </a>
+        </div>
+        <div class="space-y-2">
+            {% for pred in top_opportunities %}
+            <a href="{% url 'fixtures:detail' pred.fixture.pk %}"
+                class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-800 transition-colors group">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-medium text-white truncate">
+                        {{ pred.fixture.home_team.name }} vs {{ pred.fixture.away_team.name }}
+                    </p>
+                    <p class="text-xs text-slate-500 truncate">{{ pred.market_label }}</p>
+                </div>
+                <div class="text-right shrink-0">
+                    <span class="text-xs font-bold text-green-400">{{ pred.score }}</span>
+                    <span class="block text-xs text-slate-600">pts</span>
+                </div>
+            </a>
+            {% empty %}
+            <p class="text-xs text-slate-600 text-center py-6">Nenhuma oportunidade encontrada.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Main Table: Upcoming Fixtures -->
+<div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+        <h2 class="text-sm font-semibold text-slate-300">Próximas Partidas</h2>
+        <a href="{% url 'fixtures:list' %}" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
+            Ver todas →
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-800">
+                    <th class="table-header">Liga</th>
+                    <th class="table-header">Data / Hora</th>
+                    <th class="table-header">Mandante</th>
+                    <th class="table-header">Visitante</th>
+                    <th class="table-header">Mercado Sugerido</th>
+                    <th class="table-header">Confiança</th>
+                    <th class="table-header">Score</th>
+                    <th class="table-header">Ação</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/50">
+                {% for fixture in upcoming_fixtures %}
+                {% with best_pred=fixture.predictions.all|first %}
+                <tr class="hover:bg-slate-800/30 transition-colors group">
+                    <!-- Liga -->
+                    <td class="table-cell">
+                        <div class="flex items-center gap-2">
+                            {% if fixture.league.logo %}
+                            <img src="{{ fixture.league.logo }}" alt="{{ fixture.league.name }}"
+                                class="w-5 h-5 object-contain">
+                            {% endif %}
+                            <span class="text-slate-300 text-xs truncate max-w-[100px]">{{ fixture.league.name }}</span>
+                        </div>
+                    </td>
+                    <!-- Data -->
+                    <td class="table-cell text-slate-400 text-xs whitespace-nowrap">
+                        {{ fixture.fixture_date|date:"d/m H:i" }}
+                    </td>
+                    <!-- Mandante -->
+                    <td class="table-cell">
+                        <div class="flex items-center gap-2">
+                            {% if fixture.home_team.logo %}
+                            <img src="{{ fixture.home_team.logo }}" class="w-5 h-5 object-contain">
+                            {% endif %}
+                            <span class="font-medium text-white text-xs">{{ fixture.home_team.name }}</span>
+                        </div>
+                    </td>
+                    <!-- Visitante -->
+                    <td class="table-cell">
+                        <div class="flex items-center gap-2">
+                            {% if fixture.away_team.logo %}
+                            <img src="{{ fixture.away_team.logo }}" class="w-5 h-5 object-contain">
+                            {% endif %}
+                            <span class="font-medium text-white text-xs">{{ fixture.away_team.name }}</span>
+                        </div>
+                    </td>
+                    <!-- Mercado Sugerido -->
+                    <td class="table-cell">
+                        {% if best_pred %}
+                        <span class="px-2 py-1 bg-brand-500/10 text-brand-400 border border-brand-500/20 rounded text-xs font-medium">
+                            {{ best_pred.market_label }}
+                        </span>
+                        {% else %}
+                        <span class="text-slate-600 text-xs">—</span>
+                        {% endif %}
+                    </td>
+                    <!-- Confiança -->
+                    <td class="table-cell">
+                        {% if best_pred %}
+                        <span class="px-2 py-1 rounded text-xs font-semibold {{ best_pred.confidence|confidence_bg }}">
+                            {{ best_pred.confidence|confidence_label }}
+                        </span>
+                        {% else %}
+                        <span class="text-slate-600 text-xs">—</span>
+                        {% endif %}
+                    </td>
+                    <!-- Score -->
+                    <td class="table-cell text-center">
+                        {% if best_pred %}
+                        <div class="relative w-8 h-8 mx-auto">
+                            <svg viewBox="0 0 36 36" class="w-8 h-8 -rotate-90">
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e293b" stroke-width="3"/>
+                                <circle cx="18" cy="18" r="15.9" fill="none"
+                                    stroke="{% if best_pred.score >= 61 %}#22c55e{% elif best_pred.score >= 31 %}#f59e0b{% else %}#ef4444{% endif %}"
+                                    stroke-width="3"
+                                    stroke-dasharray="{{ best_pred.score }} 100"
+                                    stroke-linecap="round"/>
+                            </svg>
+                            <span class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white rotate-0">
+                                {{ best_pred.score }}
+                            </span>
+                        </div>
+                        {% else %}
+                        <span class="text-slate-600 text-xs">—</span>
+                        {% endif %}
+                    </td>
+                    <!-- Ação -->
+                    <td class="table-cell">
+                        <a href="{% url 'fixtures:detail' fixture.pk %}"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/20 rounded-lg text-xs font-medium transition-colors">
+                            Analisar
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-12 text-slate-600">
+                        <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p>Nenhuma partida encontrada nos próximos 7 dias.</p>
+                        <p class="text-xs mt-1">As tarefas de sincronização serão executadas em breve.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Prepare chart data
+const leaguesData = {{ fixtures_by_league|safe }};
+const marketsData = {{ predictions_by_market|safe }};
+
+// Color palette
+const COLORS = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#64748b'];
+
+// Leagues Chart
+const leaguesCtx = document.getElementById('leaguesChart').getContext('2d');
+new Chart(leaguesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: leaguesData.map(d => d.league__name || 'Outros'),
+        datasets: [{
+            data: leaguesData.map(d => d.count),
+            backgroundColor: COLORS,
+            borderWidth: 0,
+            hoverOffset: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10, padding: 8 }
+            }
+        },
+        cutout: '65%',
+    }
+});
+
+// Markets Chart
+const marketsCtx = document.getElementById('marketsChart').getContext('2d');
+new Chart(marketsCtx, {
+    type: 'bar',
+    data: {
+        labels: marketsData.map(d => d.market_label || d.market),
+        datasets: [{
+            data: marketsData.map(d => d.count),
+            backgroundColor: COLORS.map(c => c + '90'),
+            borderColor: COLORS,
+            borderWidth: 1,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+        }
+    }
+});
+</script>
+{% endblock %}
+
+<style>
+    .table-header {
+        @apply px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+    }
+    .table-cell {
+        @apply px-4 py-3;
+    }
+</style>

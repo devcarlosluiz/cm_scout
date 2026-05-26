@@ -1,0 +1,30 @@
+<!-- Form row for recent results -->
+{% if result_fixture.home_team_id == ref_team.pk %}
+    {% with is_home=True scored=result_fixture.home_score conceded=result_fixture.away_score %}
+    <div class="flex items-center gap-2 text-xs">
+        <span class="w-16 text-slate-500 shrink-0">{{ result_fixture.fixture_date|date:"d/m" }}</span>
+        <span class="px-1.5 py-0.5 rounded font-bold text-xs
+            {% if scored > conceded %}bg-green-500/15 text-green-400
+            {% elif scored == conceded %}bg-yellow-500/15 text-yellow-400
+            {% else %}bg-red-500/15 text-red-400{% endif %}">
+            {% if scored > conceded %}V{% elif scored == conceded %}E{% else %}D{% endif %}
+        </span>
+        <span class="text-slate-300 flex-1 truncate">vs {{ result_fixture.away_team.name }}</span>
+        <span class="font-mono text-slate-400 shrink-0">{{ scored }}–{{ conceded }}</span>
+    </div>
+    {% endwith %}
+{% else %}
+    {% with is_home=False scored=result_fixture.away_score conceded=result_fixture.home_score %}
+    <div class="flex items-center gap-2 text-xs">
+        <span class="w-16 text-slate-500 shrink-0">{{ result_fixture.fixture_date|date:"d/m" }}</span>
+        <span class="px-1.5 py-0.5 rounded font-bold text-xs
+            {% if scored > conceded %}bg-green-500/15 text-green-400
+            {% elif scored == conceded %}bg-yellow-500/15 text-yellow-400
+            {% else %}bg-red-500/15 text-red-400{% endif %}">
+            {% if scored > conceded %}V{% elif scored == conceded %}E{% else %}D{% endif %}
+        </span>
+        <span class="text-slate-300 flex-1 truncate">vs {{ result_fixture.home_team.name }}</span>
+        <span class="font-mono text-slate-400 shrink-0">{{ scored }}–{{ conceded }}</span>
+    </div>
+    {% endwith %}
+{% endif %}

@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load core_tags humanize %}
+
+{% block title %}{{ fixture.home_team }} vs {{ fixture.away_team }}{% endblock %}
+{% block page_title %}Análise da Partida{% endblock %}
+{% block page_subtitle %}{{ fixture.fixture_date|date:"d/m/Y H:i" }} — {{ fixture.league.name }}{% endblock %}
+
+{% block content %}
+
+<!-- Match Header -->
+<div class="bg-surface-900 border border-slate-800 rounded-xl p-6 mb-5">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2 text-sm text-slate-400">
+            {% if fixture.league.logo %}
+            <img src="{{ fixture.league.logo }}" class="w-5 h-5 object-contain">
+            {% endif %}
+            <span>{{ fixture.league.name }}</span>
+            {% if fixture.round %}<span class="text-slate-600">·</span><span>{{ fixture.round }}</span>{% endif %}
+        </div>
+        <!-- Favorite toggle -->
+        <div id="favorite-btn"
+            hx-post="{% url 'favorites:toggle' fixture.pk %}"
+            hx-trigger="click"
+            hx-swap="outerHTML"
+            class="cursor-pointer p-2 rounded-lg hover:bg-slate-800 transition-colors
+                {% if is_favorite %}text-amber-400{% else %}text-slate-600 hover:text-amber-400{% endif %}">
+            <svg class="w-5 h-5" fill="{% if is_favorite %}currentColor{% else %}none{% endif %}" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Teams -->
+    <div class="flex items-center justify-center gap-8 py-4">
+        <!-- Home Team -->
+        <div class="flex flex-col items-center gap-3 flex-1">
+            {% if fixture.home_team.logo %}
+            <img src="{{ fixture.home_team.logo }}" alt="{{ fixture.home_team.name }}"
+                class="w-20 h-20 object-contain drop-shadow-lg">
+            {% endif %}
+            <div class="text-center">
+                <a href="{% url 'teams:detail' fixture.home_team.pk %}"
+                    class="text-xl font-bold text-white hover:text-brand-400 transition-colors">
+                    {{ fixture.home_team.name }}
+                </a>
+                {% if home_standing %}
+                <p class="text-sm text-slate-500 mt-1">{{ home_standing.position }}º lugar · {{ home_standing.points }} pts</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Score / Time -->
+        <div class="flex flex-col items-center gap-2 min-w-[120px]">
+            {% if fixture.home_score is not None %}
+            <div class="text-5xl font-black text-white font-mono tracking-tight">
+                {{ fixture.home_score }} — {{ fixture.away_score }}
+            </div>
+            {% else %}
+            <div class="text-3xl font-bold text-white font-mono">
+                {{ fixture.fixture_date|date:"H:i" }}
+            </div>
+            <div class="text-xs text-slate-500">{{ fixture.fixture_date|date:"d/m/Y" }}</div>
+            {% endif %}
+            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                {% if fixture.status == 'NS' %}bg-blue-500/15 text-blue-400
+                {% elif fixture.status == 'FT' %}bg-slate-700 text-slate-400
+                {% else %}bg-green-500/15 text-green-400{% endif %}">
+                {% if fixture.status == 'NS' %}Agendado
+                {% elif fixture.status == 'FT' %}Encerrado
+                {% elif fixture.status == 'HT' %}Intervalo
+                {% elif fixture.status == 'LIVE' %}AO VIVO
+                {% else %}{{ fixture.status }}{% endif %}
+            </span>
+        </div>
+
+        <!-- Away Team -->
+        <div class="flex flex-col items-center gap-3 flex-1">
+            {% if fixture.away_team.logo %}
+            <img src="{{ fixture.away_team.logo }}" alt="{{ fixture.away_team.name }}"
+                class="w-20 h-20 object-contain drop-shadow-lg">
+            {% endif %}
+            <div class="text-center">
+                <a href="{% url 'teams:detail' fixture.away_team.pk %}"
+                    class="text-xl font-bold text-white hover:text-brand-400 transition-colors">
+                    {{ fixture.away_team.name }}
+                </a>
+                {% if away_standing %}
+                <p class="text-sm text-slate-500 mt-1">{{ away_standing.position }}º lugar · {{ away_standing.points }} pts</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+
+    <!-- Left: Analysis Indicators -->
+    <div class="xl:col-span-1 space-y-4">
+
+        <!-- Market Predictions -->
+        <div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-800">
+                <h3 class="text-sm font-semibold text-slate-300">Indicadores de Mercado</h3>
+            </div>
+            <div class="p-4 space-y-3">
+                {% for pred in predictions %}
+                <div class="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold text-white">{{ pred.market_label }}</span>
+                        <span class="px-2 py-0.5 rounded text-xs font-bold {{ pred.confidence|confidence_bg }}">
+                            {{ pred.confidence|confidence_label }}
+                        </span>
+                    </div>
+                    <!-- Score bar -->
+                    <div class="mb-2">
+                        <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                            <span>Score</span>
+                            <span class="font-mono font-bold
+                                {% if pred.score >= 61 %}text-green-400
+                                {% elif pred.score >= 31 %}text-yellow-400
+                                {% else %}text-red-400{% endif %}">
+                                {{ pred.score }}/100
+                            </span>
+                        </div>
+                        <div class="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500
+                                {% if pred.score >= 61 %}bg-green-500
+                                {% elif pred.score >= 31 %}bg-yellow-500
+                                {% else %}bg-red-500{% endif %}"
+                                style="width: {{ pred.score }}%">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">{{ pred.reason }}</p>
+                </div>
+                {% empty %}
+                <p class="text-center text-slate-600 text-xs py-6">
+                    Análise ainda não calculada para esta partida.
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Odds Table -->
+        {% if odds_by_market %}
+        <div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-800">
+                <h3 class="text-sm font-semibold text-slate-300">Odds Disponíveis</h3>
+            </div>
+            <div class="p-4">
+                {% for market_code, market_odds in odds_by_market.items %}
+                <div class="mb-4">
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-2">
+                        {{ market_odds.0.get_market_display }}
+                    </p>
+                    <div class="space-y-1.5">
+                        {% for odd in market_odds %}
+                        <div class="flex items-center justify-between py-1.5 px-2 rounded hover:bg-slate-800 transition-colors">
+                            <div>
+                                <span class="text-xs text-white">{{ odd.selection }}</span>
+                                <span class="text-xs text-slate-600 ml-2">{{ odd.bookmaker.name }}</span>
+                            </div>
+                            <span class="text-sm font-bold font-mono {{ odd.odd|odd_color }}">
+                                {{ odd.odd }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right: Stats + H2H + Form -->
+    <div class="xl:col-span-2 space-y-4">
+
+        <!-- Team Stats Comparison -->
+        {% if home_stats and away_stats %}
+        <div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-800">
+                <h3 class="text-sm font-semibold text-slate-300">Estatísticas Comparativas</h3>
+            </div>
+            <div class="p-5 space-y-4">
+                {% include 'fixtures/partials/stat_bar.html' with label="Média Gols Marcados" home=home_stats.avg_goals_scored away=away_stats.avg_goals_scored max=3.5 %}
+                {% include 'fixtures/partials/stat_bar.html' with label="Média Gols Sofridos" home=home_stats.avg_goals_conceded away=away_stats.avg_goals_conceded max=3.5 %}
+                {% include 'fixtures/partials/stat_bar.html' with label="BTTS %" home=home_stats.both_teams_score_rate away=away_stats.both_teams_score_rate max=100 %}
+                {% include 'fixtures/partials/stat_bar.html' with label="Over 2.5 %" home=home_stats.over25_rate away=away_stats.over25_rate max=100 %}
+                {% include 'fixtures/partials/stat_bar.html' with label="Clean Sheet %" home=home_stats.clean_sheet_rate away=away_stats.clean_sheet_rate max=100 %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Form -->
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Home Form -->
+            <div class="bg-surface-900 border border-slate-800 rounded-xl p-4">
+                <h3 class="text-xs font-semibold text-slate-500 uppercase mb-3">
+                    Forma Recente — {{ fixture.home_team.name }}
+                </h3>
+                <div class="space-y-2">
+                    {% for f in home_form %}
+                    {% include 'fixtures/partials/form_row.html' with ref_team=fixture.home_team result_fixture=f %}
+                    {% empty %}
+                    <p class="text-xs text-slate-600">Sem dados recentes.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Away Form -->
+            <div class="bg-surface-900 border border-slate-800 rounded-xl p-4">
+                <h3 class="text-xs font-semibold text-slate-500 uppercase mb-3">
+                    Forma Recente — {{ fixture.away_team.name }}
+                </h3>
+                <div class="space-y-2">
+                    {% for f in away_form %}
+                    {% include 'fixtures/partials/form_row.html' with ref_team=fixture.away_team result_fixture=f %}
+                    {% empty %}
+                    <p class="text-xs text-slate-600">Sem dados recentes.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Head to Head -->
+        <div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-800">
+                <h3 class="text-sm font-semibold text-slate-300">Confronto Direto (H2H)</h3>
+            </div>
+            <div class="p-4">
+                {% if h2h %}
+                <div class="space-y-2">
+                    {% for match in h2h %}
+                    <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-800/40 hover:bg-slate-800 transition-colors">
+                        <span class="text-xs text-slate-500 w-20">{{ match.fixture_date|date:"d/m/Y" }}</span>
+                        <div class="flex items-center gap-3 flex-1 justify-center">
+                            <span class="text-sm font-medium text-white text-right flex-1">{{ match.home_team.name }}</span>
+                            <span class="px-3 py-1 bg-slate-700 rounded font-mono font-bold text-white text-sm">
+                                {{ match.home_score }} — {{ match.away_score }}
+                            </span>
+                            <span class="text-sm font-medium text-white text-left flex-1">{{ match.away_team.name }}</span>
+                        </div>
+                        <span class="w-20 text-right">
+                            {% if match.total_goals > 2 %}
+                            <span class="text-xs text-green-400">+2.5</span>
+                            {% else %}
+                            <span class="text-xs text-red-400">-2.5</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-slate-600 text-sm py-6">Sem histórico de confronto direto.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

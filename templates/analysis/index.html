@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Oportunidades{% endblock %}
+{% block page_title %}Oportunidades de Análise{% endblock %}
+{% block page_subtitle %}Previsões de alta e média confiança para os próximos 7 dias{% endblock %}
+
+{% block content %}
+
+<!-- Market Stats Row -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+    {% for stat in market_stats %}
+    <div class="bg-surface-900 border border-slate-800 rounded-xl p-4">
+        <p class="text-2xl font-bold text-white">{{ stat.count }}</p>
+        <p class="text-xs text-slate-500 mt-0.5">{{ stat.market_label|default:stat.market }}</p>
+        <div class="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-brand-500 rounded-full" style="width: {% widthratio stat.avg_score 100 100 %}%"></div>
+        </div>
+        <p class="text-xs text-slate-600 mt-1">Score médio: {{ stat.avg_score|floatformat:0 }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- High Confidence -->
+<div class="mb-5">
+    <div class="flex items-center gap-2 mb-3">
+        <span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+        <h2 class="text-sm font-semibold text-slate-300">Alta Confiança (Score > 60)</h2>
+        <span class="text-xs text-slate-600">({{ high_confidence.count }} oportunidades)</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        {% for pred in high_confidence %}
+        {% include 'analysis/partials/prediction_card.html' %}
+        {% empty %}
+        <div class="col-span-full text-center py-8 text-slate-600 text-sm">
+            Nenhuma previsão de alta confiança no momento.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Medium Confidence -->
+<div>
+    <div class="flex items-center gap-2 mb-3">
+        <span class="w-2.5 h-2.5 bg-yellow-500 rounded-full"></span>
+        <h2 class="text-sm font-semibold text-slate-300">Média Confiança (Score 31–60)</h2>
+        <span class="text-xs text-slate-600">({{ medium_confidence.count }} oportunidades)</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        {% for pred in medium_confidence %}
+        {% include 'analysis/partials/prediction_card.html' %}
+        {% empty %}
+        <div class="col-span-full text-center py-8 text-slate-600 text-sm">
+            Nenhuma previsão de média confiança no momento.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}{{ team.name }}{% endblock %}
+{% block page_title %}{{ team.name }}{% endblock %}
+{% block page_subtitle %}{{ team.country }}{% if team.founded %} · Fundado em {{ team.founded }}{% endif %}{% endblock %}
+
+{% block content %}
+
+<!-- Team Header -->
+<div class="bg-surface-900 border border-slate-800 rounded-xl p-6 mb-5 flex items-center gap-6">
+    {% if team.logo %}
+    <img src="{{ team.logo }}" class="w-20 h-20 object-contain">
+    {% else %}
+    <div class="w-20 h-20 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold text-slate-600">
+        {{ team.name|slice:":1" }}
+    </div>
+    {% endif %}
+    <div>
+        <h2 class="text-2xl font-bold text-white">{{ team.name }}</h2>
+        <p class="text-slate-400 mt-1">{{ team.country }}</p>
+        {% if team.founded %}
+        <p class="text-slate-600 text-sm mt-1">Fundado em {{ team.founded }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stats + Upcoming -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+
+    <!-- Statistics -->
+    {% if stats %}
+    <div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-300">Estatísticas Recentes</h3>
+        </div>
+        <div class="p-5 space-y-4">
+            {% include 'fixtures/partials/stat_bar.html' with label="Média Gols Marcados" home=stats.avg_goals_scored away=0 max=4 %}
+            {% include 'fixtures/partials/stat_bar.html' with label="Média Gols Sofridos" home=stats.avg_goals_conceded away=0 max=4 %}
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+                    <p class="text-xl font-bold text-white">{{ stats.over25_rate|floatformat:0 }}%</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Over 2.5</p>
+                </div>
+                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+                    <p class="text-xl font-bold text-white">{{ stats.both_teams_score_rate|floatformat:0 }}%</p>
+                    <p class="text-xs text-slate-500 mt-0.5">BTTS</p>
+                </div>
+                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+                    <p class="text-xl font-bold text-green-400">{{ stats.clean_sheet_rate|floatformat:0 }}%</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Clean Sheet</p>
+                </div>
+                <div class="p-3 bg-slate-800/50 rounded-lg text-center">
+                    <p class="text-xl font-bold text-red-400">{{ stats.fail_to_score_rate|floatformat:0 }}%</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Sem Gol</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Fixtures -->
+    <div class="xl:col-span-2 bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-300">Próximas Partidas</h3>
+        </div>
+        <div class="divide-y divide-slate-800/50">
+            {% for fixture in upcoming %}
+            <a href="{% url 'fixtures:detail' fixture.pk %}"
+                class="flex items-center justify-between px-5 py-3 hover:bg-slate-800/40 transition-colors">
+                <span class="text-xs text-slate-500 w-28 shrink-0">{{ fixture.fixture_date|date:"d/m H:i" }}</span>
+                <div class="flex-1 flex items-center justify-center gap-3">
+                    <span class="font-medium text-white text-sm text-right flex-1">{{ fixture.home_team.name }}</span>
+                    <span class="text-xs text-slate-500 font-mono shrink-0">vs</span>
+                    <span class="font-medium text-white text-sm text-left flex-1">{{ fixture.away_team.name }}</span>
+                </div>
+                <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            {% empty %}
+            <p class="text-center py-8 text-slate-600 text-sm">Nenhuma partida agendada.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

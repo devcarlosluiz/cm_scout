@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block extra_css %}
+<style>
+    .filter-label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.375rem; font-weight: 500; }
+    .table-header { padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-select,
+    .filter-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        color: #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        outline: none;
+    }
+    .filter-select:focus,
+    .filter-input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 1px #6366f1;
+    }
+    .filter-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2rem;
+        cursor: pointer;
+    }
+    input[type="date"].filter-input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+</style>
+{% endblock %}
+
+{% block title %}Partidas{% endblock %}
+{% block page_title %}Partidas{% endblock %}
+{% block page_subtitle %}Próximos 7 dias — {{ total }} partidas encontradas{% endblock %}
+
+{% block content %}
+
+<!-- Filter Bar -->
+<div class="bg-surface-900 border border-slate-800 rounded-xl p-4 mb-5">
+    <form method="get"
+        hx-get="{% url 'fixtures:htmx_rows' %}"
+        hx-target="#fixture-table-body"
+        hx-trigger="change from:select, input delay:500ms from:input[type=text], input delay:300ms from:input[type=date]"
+        hx-include="[name]">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <!-- Liga -->
+            <div>
+                <label class="filter-label">Liga</label>
+                {{ filter.form.league }}
+            </div>
+            <!-- Status -->
+            <div>
+                <label class="filter-label">Status</label>
+                {{ filter.form.status }}
+            </div>
+            <!-- Data de -->
+            <div>
+                <label class="filter-label">De</label>
+                {{ filter.form.fixture_date__gte }}
+            </div>
+            <!-- Data até -->
+            <div>
+                <label class="filter-label">Até</label>
+                {{ filter.form.fixture_date__lte }}
+            </div>
+            <!-- Time -->
+            <div>
+                <label class="filter-label">Time</label>
+                {{ filter.form.team }}
+            </div>
+            <!-- Actions -->
+            <div class="flex items-end gap-2">
+                <button type="submit"
+                    class="flex-1 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors">
+                    Filtrar
+                </button>
+                <a href="{% url 'fixtures:list' %}"
+                    class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 text-sm rounded-lg transition-colors"
+                    title="Limpar filtros">✕</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Fixtures Table -->
+<div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-800">
+                    <th class="table-header text-left">Liga</th>
+                    <th class="table-header text-left">Data</th>
+                    <th class="table-header text-right">Mandante</th>
+                    <th class="table-header text-center px-3">vs</th>
+                    <th class="table-header text-left">Visitante</th>
+                    <th class="table-header text-left">Status</th>
+                    <th class="table-header text-left">Melhor Mercado</th>
+                    <th class="table-header text-center">Conf.</th>
+                    <th class="table-header text-center">Ação</th>
+                </tr>
+            </thead>
+            <tbody id="fixture-table-body" class="divide-y divide-slate-800/50">
+                {% include 'fixtures/partials/fixture_rows.html' with fixtures=fixtures %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

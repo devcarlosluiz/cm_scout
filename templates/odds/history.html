@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Histórico de Odds{% endblock %}
+{% block page_title %}Histórico de Odds{% endblock %}
+{% block page_subtitle %}{{ fixture.home_team }} vs {{ fixture.away_team }} · {{ fixture.fixture_date|date:"d/m/Y" }}{% endblock %}
+
+{% block content %}
+
+<div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-300">Odds por Mercado</h3>
+        <a href="{% url 'fixtures:detail' fixture.pk %}" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
+            ← Voltar para partida
+        </a>
+    </div>
+
+    {% for market_code, market_odds in odds_by_market.items %}
+    <div class="p-5 border-b border-slate-800 last:border-0">
+        <h4 class="text-xs font-semibold text-slate-500 uppercase mb-3">{{ market_odds.0.get_market_display }}</h4>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-800">
+                        <th class="table-header text-left">Casa de Apostas</th>
+                        <th class="table-header text-left">Seleção</th>
+                        <th class="table-header text-right">Odd</th>
+                        <th class="table-header text-right">Capturado em</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/50">
+                    {% for odd in market_odds %}
+                    <tr class="hover:bg-slate-800/30 transition-colors">
+                        <td class="px-4 py-2.5 text-slate-300">{{ odd.bookmaker.name }}</td>
+                        <td class="px-4 py-2.5 text-slate-400">{{ odd.selection }}</td>
+                        <td class="px-4 py-2.5 text-right font-mono font-bold {{ odd.odd|odd_color }}">{{ odd.odd }}</td>
+                        <td class="px-4 py-2.5 text-right text-xs text-slate-600">{{ odd.captured_at|date:"d/m H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-center py-12 text-slate-600">Nenhuma odd disponível para esta partida.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

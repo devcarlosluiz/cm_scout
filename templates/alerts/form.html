@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if alert %}Editar{% else %}Novo{% endif %} Alerta{% endblock %}
+{% block page_title %}{% if alert %}Editar Alerta{% else %}Novo Alerta{% endif %}{% endblock %}
+{% block page_subtitle %}Configure as condições para receber notificações{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <div class="bg-surface-900 border border-slate-800 rounded-xl p-6">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Erros gerais -->
+            {% if form.non_field_errors %}
+            <div class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="space-y-5">
+
+                <!-- Nome -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<p class="mt-1 text-xs text-red-400">{{ form.name.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Mercado + Confiança -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ form.market.label }}</label>
+                        {{ form.market }}
+                        {% if form.market.errors %}<p class="mt-1 text-xs text-red-400">{{ form.market.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ form.minimum_confidence.label }}</label>
+                        {{ form.minimum_confidence }}
+                        {% if form.minimum_confidence.errors %}<p class="mt-1 text-xs text-red-400">{{ form.minimum_confidence.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Odd mínima + Liga -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ form.minimum_odd.label }}</label>
+                        {{ form.minimum_odd }}
+                        {% if form.minimum_odd.errors %}<p class="mt-1 text-xs text-red-400">{{ form.minimum_odd.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ form.league.label }}</label>
+                        {{ form.league }}
+                        {% if form.league.errors %}<p class="mt-1 text-xs text-red-400">{{ form.league.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Checkboxes -->
+                <div class="flex items-center gap-8 pt-1">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        {{ form.send_email }}
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">
+                            {{ form.send_email.label }}
+                        </span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        {{ form.active }}
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">
+                            {{ form.active.label }}
+                        </span>
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Ações -->
+            <div class="flex items-center gap-3 mt-6 pt-5 border-t border-slate-800">
+                <button type="submit"
+                    class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-lg transition-colors">
+                    {% if alert %}Salvar Alterações{% else %}Criar Alerta{% endif %}
+                </button>
+                <a href="{% url 'alerts:list' %}"
+                    class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 text-sm rounded-lg transition-colors">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

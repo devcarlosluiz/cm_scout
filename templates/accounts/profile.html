@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil{% endblock %}
+{% block page_title %}Meu Perfil{% endblock %}
+{% block page_subtitle %}Gerencie suas informações pessoais e preferências{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl space-y-4">
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Card: Identidade -->
+        <div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+
+            <!-- Banner com info do usuário -->
+            <div class="bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 px-6 py-5 flex items-center gap-4">
+                <img src="{{ request.user.avatar_url }}" alt="Avatar"
+                    class="w-14 h-14 rounded-xl object-cover border-2 border-white/20 bg-brand-700 shrink-0">
+                <div>
+                    <h3 class="text-white font-semibold text-base leading-snug">
+                        {{ request.user.full_name|default:request.user.username }}
+                    </h3>
+                    <p class="text-brand-100 text-sm opacity-80">{{ request.user.email }}</p>
+                    <p class="text-brand-200 text-xs opacity-60 mt-0.5">Membro desde {{ request.user.date_joined|date:"M/Y" }}</p>
+                </div>
+            </div>
+
+            <!-- Campos do formulário -->
+            <div class="p-6 space-y-4">
+
+                <!-- Primeiro + Sobrenome -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}<p class="mt-1 text-xs text-red-400">{{ form.first_name.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}<p class="mt-1 text-xs text-red-400">{{ form.last_name.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Usuário -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">{{ form.username.label }}</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<p class="mt-1 text-xs text-red-400">{{ form.username.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Foto de perfil -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">{{ form.avatar.label }}</label>
+                    <label class="flex items-center gap-3 w-full px-3 py-2.5 bg-slate-800 border border-slate-700 border-dashed rounded-lg cursor-pointer hover:border-brand-500 transition-colors group">
+                        <svg class="w-4 h-4 text-slate-500 group-hover:text-brand-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="text-sm text-slate-500 group-hover:text-slate-300" id="avatar-label">Escolher imagem...</span>
+                        <div class="hidden">{{ form.avatar }}</div>
+                    </label>
+                </div>
+
+                <!-- Bio -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">{{ form.bio.label }}</label>
+                    {{ form.bio }}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Card: Preferências -->
+        <div class="bg-surface-900 border border-slate-800 rounded-xl p-6">
+            <h4 class="text-sm font-semibold text-white mb-4">Preferências</h4>
+            <div class="divide-y divide-slate-800/60">
+
+                <label class="flex items-center justify-between py-3.5 cursor-pointer group">
+                    <div>
+                        <p class="text-sm text-slate-300 group-hover:text-white transition-colors">{{ form.notification_email.label }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Receber alertas e análises por e-mail</p>
+                    </div>
+                    {{ form.notification_email }}
+                </label>
+
+                <label class="flex items-center justify-between py-3.5 cursor-pointer group">
+                    <div>
+                        <p class="text-sm text-slate-300 group-hover:text-white transition-colors">{{ form.notification_system.label }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Notificações dentro da plataforma</p>
+                    </div>
+                    {{ form.notification_system }}
+                </label>
+
+                <label class="flex items-center justify-between py-3.5 cursor-pointer group">
+                    <div>
+                        <p class="text-sm text-slate-300 group-hover:text-white transition-colors">{{ form.dark_mode.label }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Interface com tema escuro</p>
+                    </div>
+                    {{ form.dark_mode }}
+                </label>
+
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="flex items-center gap-3 pb-2">
+            <button type="submit"
+                class="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-lg transition-colors">
+                Salvar Alterações
+            </button>
+            <a href="{% url 'dashboard:index' %}"
+                class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 text-sm rounded-lg transition-colors">
+                Cancelar
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+    document.querySelector('#id_avatar')?.addEventListener('change', function() {
+        const label = document.getElementById('avatar-label');
+        if (this.files && this.files[0]) label.textContent = this.files[0].name;
+    });
+</script>
+{% endblock %}

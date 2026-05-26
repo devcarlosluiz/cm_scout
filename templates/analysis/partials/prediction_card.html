@@ -1,0 +1,61 @@
+{% load core_tags %}
+<!-- Prediction Card -->
+<a href="{% url 'fixtures:detail' pred.fixture.pk %}"
+    class="block bg-surface-900 border border-slate-800 rounded-xl p-4 hover:border-brand-500/30 hover:shadow-lg hover:shadow-brand-500/5 transition-all group">
+
+    <!-- League -->
+    <div class="flex items-center gap-2 mb-3">
+        {% if pred.fixture.league.logo %}
+        <img src="{{ pred.fixture.league.logo }}" class="w-4 h-4 object-contain">
+        {% endif %}
+        <span class="text-xs text-slate-500 truncate">{{ pred.fixture.league.name }}</span>
+        <span class="ml-auto text-xs text-slate-600">{{ pred.fixture.fixture_date|date:"d/m H:i" }}</span>
+    </div>
+
+    <!-- Teams -->
+    <div class="flex items-center justify-between gap-2 mb-3">
+        <div class="flex items-center gap-2 flex-1 min-w-0">
+            {% if pred.fixture.home_team.logo %}
+            <img src="{{ pred.fixture.home_team.logo }}" class="w-6 h-6 object-contain shrink-0">
+            {% endif %}
+            <span class="text-sm font-semibold text-white truncate">{{ pred.fixture.home_team.name }}</span>
+        </div>
+        <span class="text-xs text-slate-600 font-mono shrink-0">vs</span>
+        <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
+            <span class="text-sm font-semibold text-white truncate text-right">{{ pred.fixture.away_team.name }}</span>
+            {% if pred.fixture.away_team.logo %}
+            <img src="{{ pred.fixture.away_team.logo }}" class="w-6 h-6 object-contain shrink-0">
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Market + Score -->
+    <div class="flex items-center justify-between">
+        <div>
+            <span class="px-2 py-1 bg-brand-500/10 text-brand-400 border border-brand-500/20 rounded text-xs font-medium">
+                {{ pred.market_label }}
+            </span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="px-2 py-1 rounded text-xs font-semibold {{ pred.confidence|confidence_bg }}">
+                {{ pred.confidence|confidence_label }}
+            </span>
+            <div class="flex items-center justify-center w-9 h-9 relative">
+                <svg viewBox="0 0 36 36" class="w-9 h-9 -rotate-90">
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e293b" stroke-width="3"/>
+                    <circle cx="18" cy="18" r="15.9" fill="none"
+                        stroke="{% if pred.score >= 61 %}#22c55e{% elif pred.score >= 31 %}#f59e0b{% else %}#ef4444{% endif %}"
+                        stroke-width="3"
+                        stroke-dasharray="{{ pred.score }} 100"
+                        stroke-linecap="round"/>
+                </svg>
+                <span class="absolute text-xs font-bold text-white">{{ pred.score }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reason -->
+    <p class="text-xs text-slate-600 mt-3 leading-relaxed line-clamp-2 group-hover:text-slate-500 transition-colors">
+        {{ pred.reason }}
+    </p>
+</a>

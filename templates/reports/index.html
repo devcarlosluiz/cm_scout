@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Relatórios{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+{% block page_subtitle %}Desempenho das previsões e estatísticas gerais{% endblock %}
+
+{% block content %}
+
+<!-- Summary Stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+    <div class="bg-surface-900 border border-slate-800 rounded-xl p-5">
+        <p class="text-3xl font-bold text-white">{{ total_predictions }}</p>
+        <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider">Total de Previsões</p>
+    </div>
+    <div class="bg-surface-900 border border-slate-800 rounded-xl p-5">
+        <p class="text-3xl font-bold text-green-400">{{ high_count }}</p>
+        <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider">Alta Confiança</p>
+    </div>
+    <div class="bg-surface-900 border border-slate-800 rounded-xl p-5">
+        <p class="text-3xl font-bold text-yellow-400">{{ medium_count }}</p>
+        <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider">Média Confiança</p>
+    </div>
+    <div class="bg-surface-900 border border-slate-800 rounded-xl p-5">
+        <p class="text-3xl font-bold text-brand-400">{{ avg_score|floatformat:1 }}</p>
+        <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider">Score Médio</p>
+    </div>
+</div>
+
+<!-- By Market -->
+<div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden mb-5">
+    <div class="px-5 py-4 border-b border-slate-800">
+        <h3 class="text-sm font-semibold text-slate-300">Desempenho por Mercado</h3>
+    </div>
+    <div class="p-5">
+        {% for item in by_market %}
+        <div class="mb-4">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+                <span class="text-slate-300 font-medium">{{ item.market_label|default:item.market }}</span>
+                <span class="text-slate-500">{{ item.count }} previsões · Score médio: {{ item.avg_score|floatformat:0 }}</span>
+            </div>
+            <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div class="h-full bg-brand-500 rounded-full" style="width: {% widthratio item.avg_score 100 100 %}%"></div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-slate-600 text-sm">Nenhuma dado disponível ainda.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- By League -->
+<div class="bg-surface-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-800">
+        <h3 class="text-sm font-semibold text-slate-300">Previsões por Liga</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-800">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Liga</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Total</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Alta</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Média</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Score Médio</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/50">
+                {% for row in by_league %}
+                <tr class="hover:bg-slate-800/30 transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            {% if row.league_logo %}
+                            <img src="{{ row.league_logo }}" class="w-4 h-4 object-contain">
+                            {% endif %}
+                            <span class="text-white text-sm">{{ row.league_name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-center text-slate-300">{{ row.total }}</td>
+                    <td class="px-4 py-3 text-center text-green-400">{{ row.high }}</td>
+                    <td class="px-4 py-3 text-center text-yellow-400">{{ row.medium }}</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="font-mono font-semibold
+                            {% if row.avg_score >= 61 %}text-green-400
+                            {% elif row.avg_score >= 31 %}text-yellow-400
+                            {% else %}text-slate-500{% endif %}">
+                            {{ row.avg_score|floatformat:0 }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-8 text-slate-600">Nenhum dado disponível.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

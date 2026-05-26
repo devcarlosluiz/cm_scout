@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Ligas{% endblock %}
+{% block page_title %}Ligas Suportadas{% endblock %}
+{% block page_subtitle %}{{ leagues.count }} ligas ativas{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    {% for league in leagues %}
+    <a href="{% url 'leagues:detail' league.pk %}"
+        class="bg-surface-900 border border-slate-800 rounded-xl p-5 hover:border-brand-500/40 hover:shadow-lg hover:shadow-brand-500/5 transition-all group">
+        <div class="flex items-center gap-4">
+            {% if league.logo %}
+            <img src="{{ league.logo }}" alt="{{ league.name }}" class="w-12 h-12 object-contain">
+            {% else %}
+            <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-slate-600 font-bold text-xl">
+                {{ league.name|slice:":1" }}
+            </div>
+            {% endif %}
+            <div>
+                <h3 class="font-semibold text-white group-hover:text-brand-400 transition-colors">
+                    {{ league.name }}
+                </h3>
+                <p class="text-sm text-slate-500">{{ league.country }}</p>
+                <p class="text-xs text-slate-600 mt-0.5">Temporada {{ league.season }}</p>
+            </div>
+        </div>
+    </a>
+    {% empty %}
+    <div class="col-span-full text-center py-12 text-slate-600">
+        <p>Nenhuma liga ativa encontrada.</p>
+        <p class="text-xs mt-1">Execute a tarefa de sincronização para importar as ligas.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

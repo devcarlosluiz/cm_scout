@@ -1,0 +1,184 @@
+{% load static core_tags %}
+<!DOCTYPE html>
+<html lang="pt-BR" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}ScoutBet{% endblock %} — Análise Esportiva</title>
+
+    <!-- Tailwind CSS Play CDN (use build pipeline in production) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        surface: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            700: '#334155',
+                            800: '#1e293b',
+                            850: '#162032',
+                            900: '#0f172a',
+                            950: '#080f1e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+                        slideUp: { '0%': { transform: 'translateY(8px)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.11" defer></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    {% block extra_css %}{% endblock %}
+
+    <!-- Theme CSS -->
+    <style id="theme-style">
+        /* Light mode overrides */
+        html.light body                          { background-color: #f1f5f9 !important; color: #1e293b !important; }
+        html.light .bg-surface-950              { background-color: #e8edf5 !important; }
+        html.light .bg-surface-900              { background-color: #ffffff !important; }
+        html.light .bg-surface-800              { background-color: #f8fafc !important; }
+        html.light .bg-slate-950                { background-color: #f1f5f9 !important; }
+        html.light .bg-slate-900                { background-color: #f8fafc !important; }
+        html.light .bg-slate-800                { background-color: #f1f5f9 !important; }
+        html.light .bg-slate-700                { background-color: #e2e8f0 !important; }
+        html.light .border-slate-800            { border-color: #e2e8f0 !important; }
+        html.light .border-slate-700            { border-color: #cbd5e1 !important; }
+        html.light .divide-slate-800\/50 > *    { border-color: #e2e8f0 !important; }
+        html.light .text-white                  { color: #0f172a !important; }
+        html.light .text-slate-100              { color: #1e293b !important; }
+        html.light .text-slate-200              { color: #334155 !important; }
+        html.light .text-slate-300              { color: #475569 !important; }
+        html.light .text-slate-400              { color: #64748b !important; }
+        html.light .text-slate-500              { color: #94a3b8 !important; }
+        html.light .text-slate-600              { color: #94a3b8 !important; }
+        html.light .hover\:bg-slate-800:hover   { background-color: #e2e8f0 !important; }
+        html.light .hover\:bg-slate-700:hover   { background-color: #cbd5e1 !important; }
+        html.light header                        { background-color: rgba(255,255,255,0.85) !important; border-color: #e2e8f0 !important; }
+        html.light aside                         { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+        html.light footer                        { border-color: #e2e8f0 !important; }
+        html.light .filter-select,
+        html.light .filter-input                 { background-color: #f8fafc !important; border-color: #e2e8f0 !important; color: #1e293b !important; }
+        /* Sidebar nav links in light mode */
+        html.light .nav-link                    { color: #475569 !important; }
+        html.light .nav-link:hover              { background-color: #f1f5f9 !important; color: #0f172a !important; }
+        html.light .nav-active                  { background-color: #eef2ff !important; color: #4f46e5 !important; }
+    </style>
+
+    <!-- Apply theme BEFORE render to avoid flash -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('scoutbet-theme') || 'dark';
+            document.getElementById('html-root').classList.add(theme);
+        })();
+    </script>
+</head>
+<body class="bg-surface-950 text-slate-100 font-sans antialiased min-h-screen flex">
+
+    <!-- Sidebar -->
+    {% include 'partials/sidebar.html' %}
+
+    <!-- Main content wrapper -->
+    <div id="main-wrapper" class="flex-1 flex flex-col min-w-0 transition-all duration-300 ml-64" id="page-content">
+
+        <!-- Top Navbar -->
+        {% include 'partials/navbar.html' %}
+
+        <!-- Page content -->
+        <main class="flex-1 p-6 overflow-y-auto animate-fade-in">
+
+            <!-- Flash messages -->
+            {% if messages %}
+            <div class="mb-4 space-y-2" id="messages-container">
+                {% for message in messages %}
+                <div class="flex items-center gap-3 px-4 py-3 rounded-lg border text-sm
+                    {% if message.tags == 'success' %}bg-green-500/10 border-green-500/30 text-green-400
+                    {% elif message.tags == 'error' %}bg-red-500/10 border-red-500/30 text-red-400
+                    {% elif message.tags == 'warning' %}bg-yellow-500/10 border-yellow-500/30 text-yellow-400
+                    {% else %}bg-brand-500/10 border-brand-500/30 text-brand-400{% endif %}"
+                    x-data="{ show: true }" x-show="show">
+                    <span class="flex-1">{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-auto opacity-60 hover:opacity-100 transition-opacity">✕</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-slate-800 px-6 py-4 text-xs text-slate-500 flex items-center justify-between">
+            <span>© 2024 ScoutBet — Análise Esportiva Inteligente</span>
+            <span>v{{ SITE_VERSION }}</span>
+        </footer>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Theme toggle script -->
+    <script>
+        function toggleTheme() {
+            var html = document.getElementById('html-root');
+            var isDark = html.classList.contains('dark');
+            html.classList.toggle('dark', !isDark);
+            html.classList.toggle('light', isDark);
+            localStorage.setItem('scoutbet-theme', isDark ? 'light' : 'dark');
+            document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
+            document.getElementById('icon-moon').classList.toggle('hidden', isDark);
+        }
+        // Sync icon state on load
+        document.addEventListener('DOMContentLoaded', function() {
+            var isDark = document.getElementById('html-root').classList.contains('dark');
+            document.getElementById('icon-sun').classList.toggle('hidden', isDark);
+            document.getElementById('icon-moon').classList.toggle('hidden', !isDark);
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- HTMX config -->
+    <script>
+        document.body.addEventListener('htmx:configRequest', (e) => {
+            e.detail.headers['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+                || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+        });
+    </script>
+    {% csrf_token %}
+</body>
+</html>
